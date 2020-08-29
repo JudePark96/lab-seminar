@@ -19,6 +19,9 @@
         font-weight: 200;
         margin-bottom: -1%;
       }
+      .remark-slide-content {
+        padding: 1em 2em 1em 2em;
+      }
       .remark-slide-content h1 { font-size: 3em; }
       .remark-slide-content h2 { font-size: 2em; }
       .remark-slide-content h3 { font-size: 1.6em; }
@@ -114,7 +117,7 @@
         color: #000;
       }
       .right-column {
-        width: 75%;
+        width: 78%;
         float: right;
         padding-top: 1em;
       }
@@ -123,6 +126,7 @@
         width: 100%;
         margin:0;
         padding:0;
+        text-align: center;
         border-collapse: collapse;
         border-spacing: 0;
       }
@@ -133,9 +137,13 @@
         padding: 5px;
       }
 
+      th {
+        text-align: center;
+      }
+
       table th, table td {
         border: 1px solid #ddd;
-        padding: 5px;
+        padding: 1%;
         text-align: center;
         vertical-align: middle; 
       }
@@ -148,7 +156,6 @@
       table th {
         text-transform: uppercase;
         font-size: 1em;
-        text-align: center;
         font-family: 'Roboto';
         font-weight: 400;
         letter-spacing: 1px;
@@ -170,7 +177,6 @@
 
       table td {
         display: block;
-        text-align: center;
         border-bottom: 0px dotted #ccc;
       }
 
@@ -189,8 +195,9 @@ class: middle, inverse
 layout: true
 ---
 ## A Study of Keyphrases Extraction & Generation
-### Jude Park
+### Eunhwan Park
 ### judepark@kookmin.ac.kr
+### 20. 09. 04.
 ---
 layout: false
 .left-column[
@@ -218,8 +225,8 @@ One Size Does Not Fit All (CatSeqD)
 Results
 
 |  |      KP20K      |  Inspec | SemEval
-|----------|:-------------:|------:|--
-| F1@5 |  0| 0 | 0
+|----------|-------------|------|--
+| F1@5 |  0|0|0
 | F1@10 |    0   |   0 | 0 
 
 ]
@@ -235,7 +242,7 @@ Exclusive Hierarchical Decoding for Deep Keyphrase Generation (ExHiRD)
 Results
 
 |  |      KP20K      |  Inspec | SemEval
-|----------|:-------------:|------:|--
+|----------|-------------|------|--
 | F1@5 |  0| 0 | 0
 | F1@10 |    0   |   0 | 0 
 
@@ -253,10 +260,9 @@ BERT-based Span Extraction (BERT-SE)
 Results
 
 |  |      KP20K      
-|----------|:-------------:
-| F1@5 |  0| 
-| F1@10 |    0   | 
-
+|----------|-------------|
+| F1@span_start |  45.61  | 
+| F1@span_end | 45.64  |
 ]
 
 ---
@@ -306,7 +312,60 @@ return normalize_graph(adj)
 
 But, usually construct adjacency matrix through dependency parse tree.
 ]
+---
+layout: false
+.left-column[
+  ### Baseline Experiments
+  ### GCN-based Representation
+]
+.right-column[
+Build encoder as GCN, not RNN-based!
 
+```python
+class GCNLayer(nn.Module):
+    def __init__(self, input_dim: int, output_dim: int) -> None:
+        super(GCNLayer, self).__init__()
+        self.W_f = nn.Parameter(torch.randn(input_dim, output_dim))
+        self.W_b = nn.Parameter(torch.randn(input_dim, output_dim))
+        self.W = nn.Parameter(torch.randn(input_dim, output_dim))
+
+    def forward(self,
+                x: torch.Tensor,
+                a_f: torch.Tensor,
+                a_b: torch.Tensor):
+        h_f = torch.bmm(a_f, x).matmul(self.W_f)
+        h_b = torch.bmm(a_b, x).matmul(self.W_b)
+        h_w = torch.matmul(x, self.W)
+
+        f_h = h_f + h_b + h_w
+        return x + (f_h * torch.sigmoid(f_h))
+```
+Advantage of GCN-based Encoder:
+- We can explicitly leverage the short- and long-term dependency between words.
+
+But, there is some issues:
+- Restrict the output to the nodes of the graph.
+]
+---
+layout: false
+
+.left-column[
+  ### Baseline Experiments
+  ### GCN-based Representation
+]
+
+.right-column[
+
+Build encoder as combining GCN and RNN.
+
+<center><img src="./rnn-gcn-figure.png" width="80%"></center>
+<center><p>Figure 1. Illustration of RNN + GCN</p></center>
+]
+---
+layout: false
+class: middle, inverse
+
+# <center>Thank you</center>
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
